@@ -19,6 +19,15 @@
 #define PORTB "22620"
 #define PORTC "23620"
 
+#ifndef DATA_H_
+#define DATA_H_
+ float data=resultA;
+#endif
+#include <data.h>
+
+
+
+
 // get sockaddr,IPV4 OR IPV6
 void *get_in_addr(struct sockaddr *sa){
 	if (sa->sa_family==AF_INET){
@@ -29,7 +38,7 @@ void *get_in_addr(struct sockaddr *sa){
 }
 
 // the backsever calculate the  result (Using UDP)
-float calcul(float data[],char function[],sever_name){
+float calcul(float data,char function[],char sever_name){
 	int mysock;
 	struct addrinfo hints,*servinfo, *p;
 	int rv;
@@ -92,11 +101,13 @@ int main(){
 	int yes=1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
+	char function=function;
+	float data=data;
 	
 	memset(&hints,0,sizeof hints);
 	hints.ai_family= AF_UNSPEC;
 	hints.ai_socktype=SOCK_STREAM;
-	hints.ai_flags=AT_PASSIVE;
+	hints.ai_flags=AI_PASSIVE;
 
 	if((rv=getaddrinfo(HOST,TCPPORT,&hints,&servinfo))!=0){
 		fprintf(stderr, "getaddrinfo: %s\n",gai_strerror(rv));
@@ -126,16 +137,16 @@ int main(){
 	} 
 	if(p==NULL){
 	fprintf(stderr,"Server failed to bind \n");
-	return 2
+	return 2;
 	}
 	freeaddrinfo(servinfo);
 
 	//listen
-	if (listen(sockfd,BACKLIG)==-1){
+	if (listen(sockfd,BACKLOG)==-1){
 		perror("listen");
 		exit(1);
 	}
-	printf("The AWS is up adn running \n");
+	printf("The AWS is up and running \n");
 
 	while(1){
 		sin_size=sizeof their_addr;

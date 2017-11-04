@@ -17,14 +17,14 @@ int main(void){
 	int sockfd;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
-	int sockaddr_storage therir_addr;
+	int sockaddr_storage,their_addr;
 	socklen_t addr_len;
 
 
 	memset(&hints,0,sizeof hints);
-	hits.ai_family = AFUNSPEC;
+	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype =SOCK_DGRAM;
-	hints.ai_flags = AT_PASSIVE; // use my IP
+	hints.ai_flags = AI_PASSIVE; // use my IP
 
 	if((rv =getaddrinfo(HOST,SEVERPORT,&hints,&servinfo))!=0){
 		fprintf(stderr,"getaddrinfo: %s\n",gai_strerror(rv));
@@ -33,12 +33,12 @@ int main(void){
 	}
 
 	for (p= servinfo;p!=NULL;p=p->ai_next){
-		if ((sockfd=socket(p->ai_socktype,p->ai_protocol))==-1){
+		if ((sockfd= socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
 			perror("serverC:socket");
 			continue;
 
 		}
-		if bind((sockfd,p-ai_addr,p->ai_addrlen)==-1){
+		if (bind(sockfd,p->ai_addr,p->ai_addrlen)==-1){
 			close(sockfd);
 			perror("serverC:bind");
 			continue;
@@ -47,27 +47,28 @@ int main(void){
 
 	}
 
-if(p == NULL){
-	fprintf(stderr, "serverC: failed to bind the socket\n", );
-	return 0;
-}
-freeaddrinfo(servinfo);
-printf("The server C is up and using UDP on port %s.\n",SEVERPORT );
- 
-recvfrom(sockfd,(char*)&data,sizeof data,0,(struct( sockaddr *)&therir_addr,&addr_len))
-printf("The Server C reveived input %s.\n", data);
+	if(p == NULL){
+		fprintf(stderr, "serverC: failed to bind the socket\n");
+		return 0;
+	}
+	freeaddrinfo(servinfo);
+	printf("The server C is up and using UDP on port %s.\n",SEVERPORT );
+ 	
+ 	float data;
+	recvfrom(sockfd,(char*)&data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
+	printf("The Server C reveived input %f.\n", data);
 
-int result=0;
+	int result=0;
 
-result=data*data*data*data*data;
+	result=data*data*data*data*data;
 
-printf("The Server C claculated square %f\n",data );
-
-
-
-// send back to  AWS
-sendto(sockfd,(char*)&result,sizeof result,0,(struct( sockaddr *)&therir_addr, sizeof addr_len));
-printf("The Server C has sended the output to AWS %s\n", data);
+	printf("The Server C claculated square %f\n",data );
 
 
-}// main function
+
+	// send back to  AWS
+	sendto(sockfd,(char*)&result,sizeof result,0,(struct sockaddr *)&their_addr, sizeof addr_len);
+	printf("The Server C has sended the output to AWS %f\n", data);
+
+
+	}// main function

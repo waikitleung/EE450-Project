@@ -14,10 +14,10 @@
 #define HOST "localhost"
 
 int main(void){
-	int sockfd;
+	int sockfd,new_fd;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
-	int sockaddr_storage,their_addr;
+	struct sockaddr_storage,their_addr;
 	socklen_t addr_len;
 
 
@@ -26,9 +26,9 @@ int main(void){
 	hints.ai_socktype =SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
-	if((rv =getaddrinfo(HOST,SEVERPORT,&hints,&servinfo))!=0){
+	if((rv =getaddrinfo(HOST,SEVERPORT,&hints,&servinfo))!=0){  // return 0 if success
 		fprintf(stderr,"getaddrinfo: %s\n",gai_strerror(rv));
-		return 0;
+		return 1;   // means the process is not normal
 
 	}
 
@@ -72,3 +72,4 @@ int main(void){
 
 
 	}// main function
+   

@@ -13,7 +13,7 @@
 #define AWSPORT "25620"   //AWS tcp port number
 #define HOST "localhost"
  
-float data[10];
+float data;
 
 void *get_in_addr(struct sockaddr *sa){
 	if (sa->sa_family==AF_INET)
@@ -24,6 +24,8 @@ void *get_in_addr(struct sockaddr *sa){
 }
 
 
+
+// may need to change
 void data_input(){
 
 	FILE *stream=NULL;
@@ -75,7 +77,7 @@ int main(int argc,char *argv[]){
 			perror("client:connect");
 			continue;
 		}
-		break;
+		break;   //  if get here means we have connected successfully
 	}
 
 	if (p==NULL){
@@ -86,12 +88,12 @@ int main(int argc,char *argv[]){
 	freeaddrinfo(servinfo);
 	printf("The client is up and running\n");  
 	send(sockfd,function,sizeof function,0);
-	send(sockfd,(char*)&data,sizeof data,0);
+	send(sockfd,(char*)&data,sizeof data,0);   //  Be aware of the data!!
 
 
-	printf("The client has sent the %s %f to AWS.\n", function,data);
+	printf("The client has sent the %c %f to AWS.\n", function,data);
 
-	int result=0;;
+	float result=0;;
 	recv(sockfd,(char*)&result,sizeof result,0);
-	printf("According to AWS %s  on %f , %f",function,data,result);
+	printf("According to AWS %c  on %f , %f",function,data,result);
 }

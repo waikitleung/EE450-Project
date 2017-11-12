@@ -11,14 +11,27 @@
 #include <sys/wait.h>
 
 #define SEVERPORT "21620"
-#define HOST "localhost"
+#define HOST "127.0.0.1"
+
+
+void *get_in_addr(struct sockaddr *sa){      //get sockaddr IPV4 or IPV6
+	if (sa->sa_family==AF_INET)
+		{
+			return &(((struct sockaddr_in*) sa)->sin_addr);
+		}
+		return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+
 
 int main(void){
-	int sockfd,new_fd;
+	int UDPsocket;     // the socket used for received data and send result
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
-	struct sockaddr_storage,their_addr;
+	struct sockaddr_storage their_addr;
+	char buf[MAXBUFLEN];
 	socklen_t addr_len;
+	float data;      // the data receive from aws
 
 
 	memset(&hints,0,sizeof hints);
@@ -33,13 +46,13 @@ int main(void){
 	}
 
 	for (p= servinfo;p!=NULL;p=p->ai_next){
-		if ((sockfd= socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
+		if ((UDPsocket= socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
 			perror("serverA:socket");
 			continue;
 
 		}
-		if (bind(sockfd,p->ai_addr,p->ai_addrlen)==-1){
-			close(sockfd);
+		if (bind(UDPsocket,p->ai_addr,p->ai_addrlen)==-1){
+			close(UDPsocket);
 			perror("serverA:bind");
 			continue;
 		}
@@ -49,27 +62,27 @@ int main(void){
 
 	if(p == NULL){
 		fprintf(stderr, "serverA: failed to bind the socket\n");
-		return 0;
+		return 1;
 	}
 	freeaddrinfo(servinfo);
 	printf("The server A is up and using UDP on port %s.\n",SEVERPORT );
  	
- 	float data;
-	recvfrom(sockfd,(char*)&data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
-	printf("The Server A reveived input %f.\n", data);
-
-	int result=0;
-
-	result=data*data;
-
-	printf("The Server A claculated square %f\n",data );
+ 	addr_len=sizeof their_addr;
+ 	recvfrom(UDPsocket,data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
+ 	printf("The Server A reveived input %f.\n", data);
 
 
+	float result1=0;
+
+	result1=data*data;
 
 	// send back to  AWS
-	sendto(sockfd,(char*)&result,sizeof result,0,(struct sockaddr *)&their_addr, sizeof addr_len);
-	printf("The Server A has sended the output to AWS %f\n", data);
+	sendto(UDPsocket,result1,sizeof result1,0,(struct sockaddr *)&their_addr, sizeof addr_len);
+	
 
+
+	close(UDPsocket);
+	return 0;
 
 	}// main function
    

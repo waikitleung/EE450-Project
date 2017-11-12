@@ -58,20 +58,20 @@ int main(int argc,char *argv[]){
 	}
 
 	if (p==NULL){
-		printf(stderr, "client:failed to connect.\n");
+		fprintf(stderr, "client:failed to connect.\n");
 		exit(0);
 		return 2;
 	}
 	freeaddrinfo(servinfo);
 
-	printf("The client is up and running\n");  
-	send(sockfd,argv[1],sizeof argv[1],0);
-	send(sockfd,data,sizeof data,0);   //  Be aware of the data!!
+	printf("The client is up and running 1\n");  
+	send(sockfd,argv[1],strlen(argv[1]) ,0);
+	send(sockfd,&data,sizeof data,0);   //  Be aware of the data!!
 	
 
 	printf("The client has sent the %s %f to AWS.\n", argv[1],data);
 
-	float result=0;;
-	recvfrom(sockfd,result,sizeof result,0);   // receive from which socket??
-	printf("According to AWS %s  on %f , %f",argv[1],data,result);
+	float final_result=0;
+	recv(sockfd,&final_result,sizeof final_result,0);   // receive from which socket??
+	printf("According to AWS %s  on %f , %f\n",argv[1],data,final_result);
 }

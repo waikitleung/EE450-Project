@@ -11,11 +11,11 @@
 #include <sys/wait.h>
 
 #define AWSPORT "25620"   //AWS tcp port number
-#define HOST "localhost"
+#define HOST "127.0.0.1"
  
-float data;
 
-void *get_in_addr(struct sockaddr *sa){
+
+void *get_in_addr(struct sockaddr *sa){      //get sockaddr IPV4 or IPV6
 	if (sa->sa_family==AF_INET)
 		{
 			return &(((struct sockaddr_in*) sa)->sin_addr);
@@ -25,35 +25,12 @@ void *get_in_addr(struct sockaddr *sa){
 
 
 
-// may need to change
-void data_input(){
-
-	FILE *stream=NULL;
-	stream=fopen("data.csv","r");
-	if(stream=NULL){
-		printf("can not open the file!\n");
-		exit(0);
-	}
-	//int ch;
-	while(!feof(stream)){
-		fscanf(stream,"%f",&data[0]);
-	}
-	fclose(stream);
-}
-
-
-
-
 
 // setup the TCP connection
 int main(int argc,char *argv[]){
-	char function[2];
-	strcpy(function,argv[1]);
-    int t=0;
-    for(t=0;t<2;t++){
-    	function[t]=toupper(function[t]);
-    }
-	int sockfd;
+	float data=atof(argv[2]);
+	
+   	int sockfd;
 	struct addrinfo hints,*servinfo,*p;
 	int rv;
 
@@ -67,12 +44,12 @@ int main(int argc,char *argv[]){
 	}
 
 	for (p=servinfo;p!=NULL;p=p->ai_next){
-		if((sockfd=socket(p->ai_family,p->ai_socktype,p->ai_protocol))==1){
+		if((sockfd=socket(p->ai_family,p->ai_socktype,p->ai_protocol))==1){   //load up address
 			perror("client:socket");
 			continue;
 		}
 	
-		if(connect(sockfd,p->ai_addr,p->ai_addrlen)==-1){
+		if(connect(sockfd,p->ai_addr,p->ai_addrlen)==-1){   //ai_addr is the server address
 			close(sockfd);
 			perror("client:connect");
 			continue;
@@ -86,14 +63,15 @@ int main(int argc,char *argv[]){
 		return 2;
 	}
 	freeaddrinfo(servinfo);
+
 	printf("The client is up and running\n");  
-	send(sockfd,function,sizeof function,0);
-	send(sockfd,(char*)&data,sizeof data,0);   //  Be aware of the data!!
+	send(sockfd,argv[1],sizeof argv[1],0);
+	send(sockfd,data,sizeof data,0);   //  Be aware of the data!!
+	
 
-
-	printf("The client has sent the %c %f to AWS.\n", function,data);
+	printf("The client has sent the %s %f to AWS.\n", argv[1],data);
 
 	float result=0;;
-	recv(sockfd,(char*)&result,sizeof result,0);
-	printf("According to AWS %c  on %f , %f",function,data,result);
+	recvfrom(sockfd,result,sizeof result,0);   // receive from which socket??
+	printf("According to AWS %s  on %f , %f",argv[1],data,result);
 }

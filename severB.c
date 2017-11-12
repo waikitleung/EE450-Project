@@ -11,14 +11,27 @@
 #include <sys/wait.h>
 
 #define SEVERPORT "22620"
-#define HOST "localhost"
+#define HOST "127.0.0.1"
+
+
+void *get_in_addr(struct sockaddr *sa){      //get sockaddr IPV4 or IPV6
+	if (sa->sa_family==AF_INET)
+		{
+			return &(((struct sockaddr_in*) sa)->sin_addr);
+		}
+		return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+
 
 int main(void){
-	int sockfd;
+	int UDPsocket;     // the socket used for received data and send result
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
-	int sockaddr_storage,their_addr;
+	struct sockaddr_storage their_addr;
+	char buf[MAXBUFLEN];
 	socklen_t addr_len;
+	float data;      // the data receive from aws
 
 
 	memset(&hints,0,sizeof hints);
@@ -26,20 +39,20 @@ int main(void){
 	hints.ai_socktype =SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
-	if((rv =getaddrinfo(HOST,SEVERPORT,&hints,&servinfo))!=0){
+	if((rv =getaddrinfo(HOST,SEVERPORT,&hints,&servinfo))!=0){  // return 0 if success
 		fprintf(stderr,"getaddrinfo: %s\n",gai_strerror(rv));
-		return 0;
+		return 1;   // means the process is not normal
 
 	}
 
 	for (p= servinfo;p!=NULL;p=p->ai_next){
-		if ((sockfd= socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
+		if ((UDPsocket= socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
 			perror("serverB:socket");
 			continue;
 
 		}
-		if (bind(sockfd,p->ai_addr,p->ai_addrlen)==-1){
-			close(sockfd);
+		if (bind(UDPsocket,p->ai_addr,p->ai_addrlen)==-1){
+			close(UDPsocket);
 			perror("serverB:bind");
 			continue;
 		}
@@ -49,26 +62,27 @@ int main(void){
 
 	if(p == NULL){
 		fprintf(stderr, "serverB: failed to bind the socket\n");
-		return 0;
+		return 1;
 	}
 	freeaddrinfo(servinfo);
 	printf("The server B is up and using UDP on port %s.\n",SEVERPORT );
  	
- 	float data;
-	recvfrom(sockfd,(char*)&data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
-	printf("The Server B reveived input %f.\n", data);
-
-	int result=0;
-
-	result=data*data*data;
-
-	printf("The Server B claculated square %f\n",data );
+ 	addr_len=sizeof their_addr;
+ 	recvfrom(UDPsocket,data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
+ 	printf("The Server B reveived input %f.\n", data);
 
 
+	float result2=0;
+
+	result2=data*data*data;
 
 	// send back to  AWS
-	sendto(sockfd,(char*)&result,sizeof result,0,(struct sockaddr *)&their_addr, sizeof addr_len);
-	printf("The Server B has sended the output to AWS %f\n", data);
+	sendto(UDPsocket,result2,sizeof result2,0,(struct sockaddr *)&their_addr, sizeof addr_len);
+	
 
+
+	close(UDPsocket);
+	return 0;
 
 	}// main function
+   

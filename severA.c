@@ -71,17 +71,18 @@ int main(void){
  	while(1)
  	{
 	 	recvfrom(UDPsocket,&data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
-	 	printf("The Server A reveived input %f.\n", data);
+	 	printf("The Server A reveived input <%f>.\n", data);
 
 
 		float result1=0;
 
 		result1=data*data;
+		printf("The Server A calculated square %f.\n", result1);
 
 		// send back to  AWS
-		int b1=sendto(UDPsocket,&result1,sizeof result1,0,(struct sockaddr *)&their_addr,  addr_len);
+		sendto(UDPsocket,&result1,sizeof result1,0,(struct sockaddr *)&their_addr,  addr_len);
 		
-	 	printf("The Server A send %f.%d\n", result1,b1);
+	 	printf("The Server A finished sending the output to AWS.\n");
 	}
 
 	close(UDPsocket);

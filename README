@@ -1,0 +1,83 @@
+Name: Weijie Liang
+
+Student ID :9056959620
+
+What I have done in this assignment:
+	I have finished all the requirements and programed five terminals which are the 	Backend_severA B and C, the client, the AWS sever.The three Backend server claculates 		the different power result and send them back to the AWS server. The AWS server 	finishes the final calculation.
+
+What each file does:
+	client.c:   Send the data and function to AWS server. And show the final result.
+	AWS server: Send the received data from client and send it to the backend server.After 			    receiving the results from the backend server, finishes the final 			    calculation.
+	serverA:    Finishes the square and 4th power result calculation.
+	serverB:    Finishes the cube and 6th power result calculation.
+	serverC:    Finishes the 5th power result calculation.
+
+The format of all the messages exchange:
+	client:  The client is up and running. 
+		 The client has sent the data and function the AWS server.
+		 The client has received the result from AWS server.
+
+	AWS: The AWS is up and running. 
+	     The AWS received input < xx> and function<xxx> from the client using TCP over                  port​ ​25620.	
+	     The​ ​AWS​ ​sent​ ​<​ ​XX ​>​ ​to​ ​Backend-Server​ ​A
+	     The​ ​AWS​ ​sent​ ​<​ ​XX ​>​ ​to​ ​Backend-Server​ ​B
+	     The​ ​AWS​ ​sent​ ​<​ ​XX ​>​ ​to​ ​Backend-Server​ ​C
+	     The​ ​AWS​ ​received​ ​<​ ​XXX​>​ ​Backend-Server​ ​<A>​ ​using​ ​UDP​ ​over​ ​port​ ​<​ ​24620​ ​>  
+	     The​ ​AWS​ ​received​ ​<​ ​XXX​>​ ​Backend-Server​ ​<A>​ ​using​ ​UDP​ ​over​ ​port​ ​<​ ​24620​ ​> 
+	     The​ ​AWS​ ​received​ ​<​ ​XXX​>​ ​Backend-Server​ ​<A>​ ​using​ ​UDP​ ​over​ ​port​ ​<​ ​24620​ ​> 
+	     The​ ​AWS​ ​sent​ ​<​ XX ​>​ ​to​ ​Backend-Server​ ​A  
+	     The​ ​AWS​ ​sent​ ​<​ XX ​>​ ​to​ ​Backend-Server​ ​B
+	     The​ ​AWS​ ​received​ ​<​ xx ​>​ ​Backend-Server​ ​<A>​ ​using​ ​UDP​ ​over​ ​port​ ​<​ ​24620 ​>  The​ ​		     AWS​ ​received​ ​<​ xx ​>​ ​Backend-Server​ ​<B>​ ​using​ ​UDP​ ​over​ ​port​ ​<​ ​24620 ​>
+	     AWS​ ​calculated​ ​function​ ​on​ ​<​ ​xx ​>:​ ​<​ xx ​> 
+	     The​ ​AWS​ ​sent​ ​<​ ​xxx ​>​ ​to​ ​client
+	
+	serverA :
+		The​ ​Server​ ​A​ ​is​ ​up​ ​and​ ​running​ ​using​ ​UDP​ ​on​ ​port​ ​21620.  
+		The​ ​Server​ ​A​ ​received​ ​input​ ​<​ xx​ ​>  
+		The​ ​Server​ ​A​ ​calculated​ ​square:​ ​<​ ​xx ​>  
+		The​ ​Server​ ​A​ ​finished​ ​sending​ ​the​ ​output​ ​to​ ​AWS  
+		The​ ​Server​ ​A​ ​received​ ​input​ ​<​ ​xxx ​>  
+		The​ ​Server​ ​A​ ​calculated​ ​square:​ ​<​ xx​ ​> 
+		The​ ​Server​ ​A​ ​finished​ ​sending​ ​the​ ​output​ ​to​ ​AWS  
+
+	serverB :
+		The​ ​Server​ ​A​ ​is​ ​up​ ​and​ ​running​ ​using​ ​UDP​ ​on​ ​port​ ​22620.  
+		The​ ​Server​ ​A​ ​received​ ​input​ ​<​ xx​ ​>  
+		The​ ​Server​ ​A​ ​calculated​ ​square:​ ​<​ ​xx ​>  
+		The​ ​Server​ ​A​ ​finished​ ​sending​ ​the​ ​output​ ​to​ ​AWS  
+		The​ ​Server​ ​A​ ​received​ ​input​ ​<​ ​xxx ​>  
+		The​ ​Server​ ​A​ ​calculated​ ​square:​ ​<​ xx​ ​> 
+		The​ ​Server​ ​A​ ​finished​ ​sending​ ​the​ ​output​ ​to​ ​AWS  
+
+	serverC :
+		The​ ​Server​ ​A​ ​is​ ​up​ ​and​ ​running​ ​using​ ​UDP​ ​on​ ​port​ ​23620.  
+		The​ ​Server​ ​A​ ​received​ ​input​ ​<​ xx​ ​>  
+		The​ ​Server​ ​A​ ​calculated​ ​square:​ ​<​ ​xx ​>  
+		The​ ​Server​ ​A​ ​finished​ ​sending​ ​the​ ​output​ ​to​ ​AWS  
+		The​ ​Server​ ​A​ ​received​ ​input​ ​<​ ​xxx ​>  
+		The​ ​Server​ ​A​ ​calculated​ ​square:​ ​<​ xx​ ​> 
+		The​ ​Server​ ​A​ ​finished​ ​sending​ ​the​ ​output​ ​to​ ​AWS  
+
+reuse of code:  Some code block for setting TCP and UDP are from "Beej's Guide to Network 			Programming -- Using Internet Sockets". They are marked in the program. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	       
+

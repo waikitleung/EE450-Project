@@ -64,7 +64,7 @@ int main(int argc,char *argv[]){
 	}
 	freeaddrinfo(servinfo);
 
-	printf("The client is up and running 1\n");  
+	printf("The client is up and running \n");  
 	send(sockfd,argv[1],strlen(argv[1]) ,0);
 	send(sockfd,&data,sizeof data,0);   //  Be aware of the data!!
 	
@@ -73,5 +73,5 @@ int main(int argc,char *argv[]){
 
 	float final_result=0;
 	recv(sockfd,&final_result,sizeof final_result,0);   // receive from which socket??
-	printf("According to AWS %s  on %f , %f\n",argv[1],data,final_result);
+	printf("According to AWS %s on <%f> <%f>\n",argv[1],data,final_result);
 }

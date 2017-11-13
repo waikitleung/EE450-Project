@@ -29,7 +29,7 @@ int main(void){
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	struct sockaddr_storage their_addr;
-	char buf[MAXBUFLEN];
+	//char buf[MAXBUFLEN];
 	socklen_t addr_len;
 	float data;      // the data receive from aws
 
@@ -68,18 +68,22 @@ int main(void){
 	printf("The server C is up and using UDP on port %s.\n",SEVERPORT );
  	
  	addr_len=sizeof their_addr;
- 	recvfrom(UDPsocket,data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
- 	printf("The Server C reveived input %f.\n", data);
+ 	 	while(1)
+ 	{
+ 	recvfrom(UDPsocket,&data,sizeof data,0,(struct sockaddr*)&their_addr,&addr_len);
+ 	printf("The Server C reveived input <%f>.\n", data);
 
 
 	float result3=0;
 
 	result3=data*data*data*data*data;
+	printf("The Server C calculated 5th power <%f>.\n", result3);
+
 
 	// send back to  AWS
-	sendto(UDPsocket,result3,sizeof result3,0,(struct sockaddr *)&their_addr, sizeof addr_len);
-	
-
+	sendto(UDPsocket,&result3,sizeof result3,0,(struct sockaddr *)&their_addr,  addr_len);
+	 	printf("The Server C finished sending the output to AWS .\n");
+}
 
 	close(UDPsocket);
 	return 0;

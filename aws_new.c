@@ -152,7 +152,7 @@ int main(){
 		perror("listen");
 		exit(1);
 	}
-	printf("The AWS is up and running 1 \n");
+	printf("The AWS is up and running  \n");
 
 	while(1){
 		sin_size=sizeof their_addr;
@@ -175,7 +175,7 @@ int main(){
 		float data;
 		recv(new_fd,function,3 ,0);
 		int b1=recv(new_fd,&data,sizeof data,0);
-		printf("The AWS received %f and function %s from the client using TCP from port.\n",data,function);
+		printf("The AWS received %f and function %s from the client using TCP from port %d.\n",data,function,client_port);
 
 		sendto(UDPsocket,&data,sizeof data,0,p1->ai_addr,p1->ai_addrlen);
 		sendto(UDPsocket,&data,sizeof data,0,p2->ai_addr,p2->ai_addrlen);
@@ -185,16 +185,16 @@ int main(){
 		printf("The AWS sent %f to BackendServer A \n", data);
 		printf("The AWS sent %f to BackendServer B \n", data);
 		printf("The AWS sent %f to BackendServer C \n", data);
-		printf("qeqwwdasds\n", data);
+		
 		//   fromlen= sizeof addr1;    test later!!
 		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
-		printf("124124123214214\n", data);
+		
 		//  port=ntohs(addr1.sin_port);   test later!!
 		//  printf("receive %d" port);    test later!!
 		//  determine where the result comes from
 		int port;
 		port=port_return(UDPsocket,addr,fromlen);     //  return the port number
-		printf("%d, %f, %d \n", b1,unkonwn_result,port);
+		
 		float resultA1;  // the square result
 		float resultB1;	 // the cube result
 		float resultC;   // the 5th power result
@@ -208,9 +208,9 @@ int main(){
 		else
 			resultC=unkonwn_result;
 		
-		b1=recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
+		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
 		port=port_return(UDPsocket,addr,fromlen);
-		printf("%d, %f, %d \n", b1,unkonwn_result,port);
+		
 
 		if (port==21620)
 			resultA1=unkonwn_result;      // square result
@@ -221,7 +221,7 @@ int main(){
 
 		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
 		port=port_return(UDPsocket,addr,fromlen);
-		printf("%d, %f, %d \n", b1,unkonwn_result,port);
+		
 		if (port==21620)
 			resultA1=unkonwn_result;
 		else if(port==22620)
@@ -230,9 +230,9 @@ int main(){
 			resultC=unkonwn_result;
 
 
-		printf("The AWS reveived square result %f from BackendServer A using UDP over port %c \n", resultA1,PORTA);
-		printf("The AWS reveived cube result %f from BackendServer B using UDP over port %c \n", resultB1,PORTB);
-		printf("The AWS reveived quintic result %f from BackendServer C using UDP over port %c \n", resultC,PORTC);
+		printf("The AWS reveived square result %f from BackendServer A using UDP over port %s \n", resultA1,PORTA);
+		printf("The AWS reveived cube result %f from BackendServer B using UDP over port %s \n", resultB1,PORTB);
+		printf("The AWS reveived quintic result %f from BackendServer C using UDP over port %s \n", resultC,PORTC);
 
 		sendto(UDPsocket,&resultA1,sizeof resultA1,0,p1->ai_addr,p1->ai_addrlen);  //send to A get The 4 power
 		sendto(UDPsocket,&resultA1,sizeof resultA1,0,p2->ai_addr,p2->ai_addrlen);  //send to B get The 6 power
@@ -263,8 +263,9 @@ int main(){
 			final_result=-data-(resultA1)/2-resultB1/3-resultA2/4-resultC/5-resultB2/6;
 		}
 
-		printf("The AWS calculate %s on %f %f \n", function,data,final_result);
+		printf("The AWS calculated %s on <%f> <%f> \n", function,data,final_result);
 		send(new_fd,&final_result,sizeof(final_result),0);
+		printf("The AWS sent <%f> to client \n",final_result);
 		close(new_fd);
 
 	} //end of while

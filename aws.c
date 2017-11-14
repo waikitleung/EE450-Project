@@ -13,22 +13,15 @@
 #include <signal.h>
 
 #define TCPPORT "25620"
-#define UDP "24620"
-#define HOST "localhost"
+#define UDPPORT "24620"
+#define HOST "127.0.0.1"
 #define PORTA "21620"
 #define PORTB "22620"
 #define PORTC "23620"
-
-#ifndef DATA_H_
-#define DATA_H_
- float data=resultA;
-#endif
-#include <data.h>
+#define BACKLOG 10
 
 
 
-
-// get sockaddr,IPV4 OR IPV6
 void *get_in_addr(struct sockaddr *sa){
 	if (sa->sa_family==AF_INET){
 		return &(((struct sockaddr_in*)sa)->sin_addr);
@@ -37,77 +30,42 @@ void *get_in_addr(struct sockaddr *sa){
 
 }
 
-// the backsever calculate the  result (Using UDP)
-float calcul(float data,char function[],char sever_name){
-	int mysock;
-	struct addrinfo hints,*servinfo, *p;
-	int rv;
-	char* backsever_port
-
-if (sever_name=='A')
-	backsever_port=PORTA;
-else if (sever_name='B')
-	backsever_port=PORTB;
-else if (sever_name='C')
-	backsever_port=PORTC;
-
-
-
-
-// set up UDP
-memset(&hins,0,sizeof hints);
-hints.ai_family = AF_UNSPEC;
-hints.ao_socketype = SOCK_DGRAM;
-
-if ((rv=getaddrinfo(HOST,backsever_port,&hints,&servinfo))!=0){
-	fprintf(stderr,"getaddrinfo:" "%s\n",gai_strerror(rv) );
-	return 1;
-}
-//loop throuth all the results 
-	for (p=servinfo;p!=NULL;p=p->ai_next){
-		if((mysock=socket(p->ai_family,p->ai_socket,p->ai_protocol))==1){
-			perror("listener:"socket);
-			continue;
-
-		}
-
-		break;
-
-	}
-if(p==NULL){
-	fprintf(stderr,"listener:failed to bind the socket\n");
-	return 2;
+int port_return(int UDPsocket,struct sockaddr_storage addr,socklen_t fromlen){
+	int port;
+	getpeername(UDPsocket,(struct sockaddr*)&addr,&fromlen);
+	struct sockaddr_in *UDP=(struct sockaddr_in*)&addr;
+	port=ntohs(UDP->sin_port);
+	return port;
 }
 
 
-// use UDP send data
-sendto(mysock,function,sizeof function,0,p->ai_addr,p->ai_addrlen);
-sendto(mysock,(char*)&data,sizeof data,0,p->ai_addr,p->ai_addrlen);
-printf("The AWS sent %f to the BackendServer %c,\n", data,sever_name);
 
-float result =0;
-recvfrom(mysock,(char*)&result,sizeof result,0,NULL,NULL);
-return result;
-
-} //  calcul end
 
 
 int main(){
 	// set up the TCP--from Beej
-	int sockfd,new_fd;  // new_fd is used to oepn the new socket to communciate
+	int sockfd,new_fd;  // sockfd is TCP socket, new_fd is used to oepn the new socket to communciate
+	int UDPsocket;
 	struct addrinfo hints,*servinfo,*p;
+	struct addrinfo *servinfoA,*servinfoB,*servinfoC;
 	struct sockaddr_storage their_addr;//  connector's address information
+	struct sockaddr_storage addr;
+	//struct sockaddr_in addr1;
 	socklen_t sin_size;
+	socklen_t fromlen;
+	struct sigaction sa;
 	int yes=1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
-	char function=function;
-	float data=data;
+	float unkonwn_result;
+	
+	
+
 	
 	memset(&hints,0,sizeof hints);
 	hints.ai_family= AF_UNSPEC;
 	hints.ai_socktype=SOCK_STREAM;
-	hints.ai_flags=AI_PASSIVE;
+	hints.ai_flags=AI_PASSIVE;       //use my IP
 
 	if((rv=getaddrinfo(HOST,TCPPORT,&hints,&servinfo))!=0){
 		fprintf(stderr, "getaddrinfo: %s\n",gai_strerror(rv));
@@ -115,7 +73,7 @@ int main(){
 
 	}
 
-	for(p=servinfo;p!=NULL;p=p->ai_next){
+	for(p=servinfo;p!=NULL;p=p->ai_next){   
 		if((sockfd=socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
 			perror("server:socket");
 			continue;
@@ -136,71 +94,182 @@ int main(){
 		break;
 	} 
 	if(p==NULL){
-	fprintf(stderr,"Server failed to bind \n");
-	return 2;
+		fprintf(stderr,"Server failed to bind \n");
+		exit(1);
 	}
-	freeaddrinfo(servinfo);
+	freeaddrinfo(servinfo); // all done with this structure
+	
+	
+
+	// now generating the UDP socket
+	hints.ai_socktype=SOCK_DGRAM;
+	if((rv=getaddrinfo(HOST,UDPPORT,&hints,&servinfo))!=0){
+		fprintf(stderr, "getaddrinfo: %s\n",gai_strerror(rv));
+		return 1;
+
+	}
+	for(p=servinfo;p!=NULL;p=p->ai_next){   
+		if((UDPsocket=socket(p->ai_family,p->ai_socktype,p->ai_protocol))==-1){
+			perror("server:socket");
+			continue;
+		}
+
+		if (setsockopt(UDPsocket,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int))==-1){
+			perror("setsockopt");
+			exit(1);
+		}
+		if (bind(UDPsocket,p->ai_addr,p->ai_addrlen)==-1){
+			close(UDPsocket);
+			perror("server:bind");
+			continue;
+		}
+		break;
+	}
+	if(p==NULL){
+		fprintf(stderr,"Server failed to bind \n");
+		exit(1);
+	}
+	freeaddrinfo(servinfo); // all done with this structure
+	
+	int severA_address,severB_address,severC_address;
+	struct addrinfo *p1,*p2,*p3;
+	severA_address=getaddrinfo(HOST,PORTA,&hints,&servinfoA);    // The type of P1?
+	p1=servinfoA;
+
+	severB_address=getaddrinfo(HOST,PORTB,&hints,&servinfoB);
+	p2=servinfoB;
+	
+	severC_address=getaddrinfo(HOST,PORTC,&hints,&servinfoC);
+	p3=servinfoC;
+	
+	
+	
+
+
 
 	//listen
 	if (listen(sockfd,BACKLOG)==-1){
 		perror("listen");
 		exit(1);
 	}
-	printf("The AWS is up and running \n");
+	printf("The AWS is up and running  \n");
 
 	while(1){
 		sin_size=sizeof their_addr;
 		new_fd=accept(sockfd,(struct sockaddr*)&their_addr,&sin_size);
 		if(new_fd==-1){
 			perror("accept");
-			exit(1);
+			continue;
+		}
+		
+
+		// get the  client port number
+		int client_port;
+		getpeername(new_fd,(struct sockaddr*)&their_addr,&sin_size);
+		struct sockaddr_in *fd=(struct sockaddr_in*)&their_addr;
+		client_port=ntohs(fd->sin_port);
+
+		//receive the information from client    HOW TO GET PORT NUMBER!!
+		char function[4];     // receive the function name
+		function[3]=0;
+		float data;
+		recv(new_fd,function,3 ,0);
+		int b1=recv(new_fd,&data,sizeof data,0);
+		printf("The AWS received %f and function %s from the client using TCP from port %s.\n",data,function,TCPPORT);
+
+		sendto(UDPsocket,&data,sizeof data,0,p1->ai_addr,p1->ai_addrlen);
+		sendto(UDPsocket,&data,sizeof data,0,p2->ai_addr,p2->ai_addrlen);
+		sendto(UDPsocket,&data,sizeof data,0,p3->ai_addr,p3->ai_addrlen);
+
+
+		printf("The AWS sent %f to BackendServer A \n", data);
+		printf("The AWS sent %f to BackendServer B \n", data);
+		printf("The AWS sent %f to BackendServer C \n", data);
+		
+		//   fromlen= sizeof addr1;    test later!!
+		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
+		
+		//  port=ntohs(addr1.sin_port);   test later!!
+		//  printf("receive %d" port);    test later!!
+		//  determine where the result comes from
+		int port;
+		port=port_return(UDPsocket,addr,fromlen);     //  return the port number
+		
+		float resultA1;  // the square result
+		float resultB1;	 // the cube result
+		float resultC;   // the 5th power result
+		float resultA2;	 // the 4th power result
+		float resultB2;  // the 6th power result
+
+		if (port==21620)
+			resultA1=unkonwn_result;
+		else if(port==22620)
+			resultB1=unkonwn_result;
+		else
+			resultC=unkonwn_result;
+		
+		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
+		port=port_return(UDPsocket,addr,fromlen);
+		
+
+		if (port==21620)
+			resultA1=unkonwn_result;      // square result
+		else if(port==22620)
+			resultB1=unkonwn_result;	  // cube result
+		else
+			resultC=unkonwn_result;		  // 5-times result
+
+		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
+		port=port_return(UDPsocket,addr,fromlen);
+		
+		if (port==21620)
+			resultA1=unkonwn_result;
+		else if(port==22620)
+			resultB1=unkonwn_result;
+		else
+			resultC=unkonwn_result;
+
+
+		printf("The AWS reveived square result %f from BackendServer A using UDP over port %s \n", resultA1,PORTA);
+		printf("The AWS reveived cube result %f from BackendServer B using UDP over port %s \n", resultB1,PORTB);
+		printf("The AWS reveived quintic result %f from BackendServer C using UDP over port %s \n", resultC,PORTC);
+
+		sendto(UDPsocket,&resultA1,sizeof resultA1,0,p1->ai_addr,p1->ai_addrlen);  //send to A get The 4 power
+		sendto(UDPsocket,&resultA1,sizeof resultA1,0,p2->ai_addr,p2->ai_addrlen);  //send to B get The 6 power
+		printf("The AWS sent %f to BackendServer A \n", resultA1);
+		printf("The AWS sent %f to BackendServer B \n", resultA1);
+
+		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
+		port=port_return(UDPsocket,addr,fromlen);
+		if (port==21620)
+			resultA2=unkonwn_result;  // the 4th power
+		else if(port==22620)
+			resultB2=unkonwn_result;  // the 6 power
+
+		recvfrom(UDPsocket,&unkonwn_result,sizeof unkonwn_result,0,&addr,&fromlen);
+		port=port_return(UDPsocket,addr,fromlen);
+		if (port==21620)
+			resultA2=unkonwn_result;  // the 4th power
+		else if(port==22620)
+			resultB2=unkonwn_result;  // the 6 power
+		
+		printf("The AWS reveived 4th power result %f from BackendServer A using UDP over port %s \n", resultA2,PORTA);
+		printf("The AWS reveived 6th power result %f from BackendServer B using UDP over port %s \n", resultB2,PORTB);
+		//calculate the final result   ATTENTION! Here needs modify!!!!!!
+		float final_result=0.0;
+		if(strcmp(function,"DIV")==0){
+			final_result=1+resultA1+resultB1+resultA2+resultC+resultB2;
+
+		}
+		else if (strcmp(function,"LOG")==0){
+			final_result=-data-(resultA1)/2-resultB1/3-resultA2/4-resultC/5-resultB2/6;
 		}
 
-		// get the port of the client     Go BACK TO CHECK THESE LINES!!
-		inet_ntop(their_addr.ss_family,get_in_addr((struct sockaddr*)&their_addr),s,sizeof s);
-		struct sockaddr_in addrTheir;
-		memset(&addrTheir,0,sizeof(addrTheir));
-		int len =sizeof(addrTheir);
-		getpeername(new_fd,(struct sockaddr*)&addrTheir,(socklen_t*)&len);
-		int client_port=addrTheir.sin_port;
-
-		//reveive the information from client
-		recv(new_fd,function,sizeof function,0);
-		printf("The AWS received %f and function %s from the client using TCP from port %d \n",data,function, client_port);
-
-
-		float resultA=calcul(function,data,'A');
-		float resultB=calcul(function,data,'B');
-		float resultC=calcul(function,data,'C');
-
-		printf("The AWS reveived square result %f from BackendServer A using UDP over port %d \n", resultA,PORTA);
-		printf("The AWS reveived cube result %f from BackendServer B using UDP over port %d \n", resultB,PORTB);
-		printf("The AWS reveived quintic result %f from BackendServer C using UDP over port %d \n", resultC,PORTC);
-
-		float origin_data=data;
-		float data=resultA;
-		float reusltA1=calcul(function,data,'A');
-		float data=resultB;
-		float reusltB1=calcul(function,data,'A');
-		printf("The AWS reveived biquadratic result %f from BackendServer A using UDP over port %d \n", resultA1,PORTA);
-		printf("The AWS reveived six power result %f from BackendServer B using UDP over port %d \n", resultB1,PORTB);
-
-
-
-		//calculate the final reuslt   ATTENTION! Here needs modify!!!!!!
-		if(strcmp(function,DIV)==0){
-			reuslt=1+origin_data+resultA+resultB+reusltA1+resultC+reusltB1;
-
-		}
-		else if (strcmp(function,LOG)==0){
-			reuslt=-origin_data-(resultA)/2-resultB/3-reusltA1/4-resultC/5-reusltB1/6;
-		}
-
-		printf("The AWS calculate %s on %f %f \n", function,origin_data,reuslt);
-		send(new_fd,(const char*)&reuslt,sizeof(reuslt),0);
+		printf("The AWS calculated %s on <%f> <%f> \n", function,data,final_result);
+		send(new_fd,&final_result,sizeof(final_result),0);
+		printf("The AWS sent <%f> to client \n",final_result);
 		close(new_fd);
 
 	} //end of while
 
-	}// end of main function
-		
+}// end of main function
